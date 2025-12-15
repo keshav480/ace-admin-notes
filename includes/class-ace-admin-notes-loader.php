@@ -1,7 +1,5 @@
 <?php
-if ( ! defined( 'WPINC' ) ) {
-	die;
-}
+if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 class Ace_Admin_Notes_Loader {
 
