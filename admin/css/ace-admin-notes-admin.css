@@ -22,3 +22,13 @@
 .ace-notes-admin-card{background:#fff;border:1px solid #dcdcde;border-radius:8px;padding:18px;box-shadow:0 1px 2px rgba(0,0,0,.06);margin-top:16px}
 .ace-notes-admin-card h2{margin-top:0}
 .ace-notes-admin-table td,.ace-notes-admin-table th{vertical-align:middle;}
+.ace-note-card.ui-draggable.ui-resizable.minimized {
+    left: calc(40px + (var(--stack-index) * 267px)) !important;
+    right: auto !important; 
+    top: auto !important;
+    bottom: 0 !important;
+    height: fit-content !important;
+}
+.ace-note-card__body.minimized_body {
+    display: none;
+}

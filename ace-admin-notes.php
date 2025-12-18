@@ -15,7 +15,7 @@
  * @wordpress-plugin
  * Plugin Name:       Ace Admin Notes
  * Plugin URI:        https://acewebx.com/our-products/
- * Description:       This is a description of the plugin.
+ * Description:       Simple draggable admin notes overlay. Create/edit notes in the admin, and they persist per site.
  * Version:           1.0.0
  * Author:            Acewebx
  * Author URI:        https://acewebx.com/

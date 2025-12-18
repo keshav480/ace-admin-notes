@@ -31,9 +31,7 @@ class Ace_Admin_Notes_Admin {
 		if ( ! current_user_can( $this->get_capability() ) ) {
 			return;
 		}
-
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/ace-admin-notes-admin.css', array(), $this->version, 'all' );
-
+		wp_enqueue_style($this->plugin_name,plugin_dir_url( __FILE__ ) . 'css/ace-admin-notes-admin.css',array(),filemtime( plugin_dir_path( __FILE__ ) . 'css/ace-admin-notes-admin.css' ),'all');
 	}
 
 	public function enqueue_scripts() {
@@ -52,11 +50,12 @@ class Ace_Admin_Notes_Admin {
 			return;
 		}
 
+	$js_file = plugin_dir_path( __FILE__ ) . 'js/ace-admin-notes-admin.js';
 		wp_enqueue_script(
 			$this->plugin_name,
 			plugin_dir_url( __FILE__ ) . 'js/ace-admin-notes-admin.js',
 			array( 'jquery', 'jquery-ui-draggable', 'jquery-ui-resizable' ),
-			$this->version,
+			file_exists( $js_file ) ? filemtime( $js_file ) : $this->version,
 			true
 		);
 

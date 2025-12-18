@@ -68,40 +68,112 @@
 		};
 
 		const buildCard = (note) => {
-			const color = palette[note.color] || note.color || '#fff7a3';
-			const $card = $('<span class="ace-note-card"></span>')
-				.attr('data-note-id', note.id)
-				.css({ left: note.x, top: note.y, width: note.width, height: note.height, background: color });
+		const color = palette[note.color] || note.color || '#fff7a3';
 
-			const $header = $('<div class="ace-note-card__header"></div>');
-			$header.append($('<span class="ace-note-card__title"></span>').text(note.title || 'Note'));
-			const $hide = $('<button type="button" class="ace-note-card__btn" aria-label="Hide">×</button>').on('click', () => {
-				// Hide locally only; do not persist so it reappears on next load.
-				const idx = notes.findIndex((n) => n.id === note.id);
-				if (idx >= 0) {
-					notes[idx] = Object.assign({}, notes[idx], { hidden: true });
-				}
-				refresh();
-			});
-			$header.append($('<div class="ace-note-card__actions"></div>').append($hide));
-			$card.append($header);
-			$card.append($('<div class="ace-note-card__body"></div>').text(note.content || ''));
+		const card = $('<span class="ace-note-card"></span>')
+		.attr('data-note-id', note.id)
+		.css({
+			left: note.x,
+			top: note.y,
+			width: note.width,
+			height: note.height,
+			background: color
+		});
 
-			$card.draggable({
-				handle: '.ace-note-card__header',
-				containment: '#ace-admin-notes-canvas',
-				scroll: false,
-				stop: (_e, ui) => savePosition(note.id, ui.position, $card),
+		/* ---------- Header ---------- */
+		const $header = $('<div class="ace-note-card__header"></div>');
+		const $title  = $('<span class="ace-note-card__title"></span>').text(note.title || 'Note');
+
+		/* ---------- Buttons ---------- */
+		const $minBtn  = $('<button type="button" class="ace-note-card__btn ace-min" aria-label="Minimize">–</button>');
+		const $fullBtn = $('<button type="button" class="ace-note-card__btn ace-full" aria-label="Fullscreen">⛶</button>');
+		const $hideBtn = $('<button type="button" class="ace-note-card__btn ace-hide" aria-label="Hide">×</button>');
+
+		const $actions = $('<div class="ace-note-card__actions"></div>')
+		.append($minBtn, $fullBtn, $hideBtn);
+
+		$header.append($title, $actions);
+		card.append($header);
+
+		/* ---------- Body ---------- */
+		const body = $('<div class="ace-note-card__body"></div>')
+		.text(note.content || '');
+
+		card.append(body);
+
+		/* ---------- State ---------- */
+		let isMinimized  = false;
+		let isFullscreen = false;
+		let prev = {};
+
+		/* ---------- Minimize ---------- */
+		$minBtn.on('click', () => {
+			body.toggleClass('minimized_body');
+			card.toggleClass('minimized');
+			updateMinimizedStack();
+		});
+		function updateMinimizedStack() {
+			$('.ace-note-card.minimized').each(function (index) {
+			$(this).css('--stack-index', index);
+		});
+	}
+			/* ---------- Fullscreen ---------- */
+		$fullBtn.on('click', () => {
+		isFullscreen = !isFullscreen;
+		if (isFullscreen) {
+			prev = {
+				left: card.css('left'),
+				top: card.css('top'),
+				width: card.width(),
+				height: card.height(),
+				zIndex: card.css('z-index')
+			};
+
+			card.addClass('is-fullscreen').css({
+				left: 0,
+				top: 0,
+				width: '100%',
+				height: '100%',
+				zIndex: 9999
 			});
-			$card.resizable({
-				minHeight: 140,
-				minWidth: 160,
-				handles: 'all',
-				containment: '#ace-admin-notes-canvas',
-				stop: (_e, ui) => saveSize(note.id, ui.size, ui.position, $card),
-			});
-			return $card;
+		} else {
+			card.removeClass('is-fullscreen').css(prev);
+		}
+		});
+
+		/* ---------- Hide ---------- */
+		$hideBtn.on('click', () => {
+			const idx = notes.findIndex(n => n.id === note.id);
+			if (idx >= 0) {
+				notes[idx] = { ...notes[idx], hidden: true };
+			}
+			refresh();
+		});
+
+		/* ---------- Drag & Resize ---------- */
+		card.draggable({
+			handle: '.ace-note-card__header',
+			containment: '#ace-admin-notes-canvas',
+			scroll: false,
+			disabled: false,
+			start: () => {
+				card.removeClass('minimized');
+				body.toggleClass('minimized_body');
+			},
+			stop: (_e, ui) => savePosition(note.id, ui.position, card),
+		});
+
+		card.resizable({
+			minHeight: 140,
+			minWidth: 160,
+			handles: 'all',
+			containment: '#ace-admin-notes-canvas',
+		stop: (_e, ui) => saveSize(note.id, ui.size, ui.position, card),
+		});
+
+		return card;
 		};
+
 
 		const renderOverlay = () => {
 			const $canvas = getCanvas();
@@ -138,7 +210,8 @@
 
 		const updateNote = (id, payload, done, opts = {}) => {
 			const { refreshOnComplete = true } = opts;
-			ajax({ action: 'aan_update_note', id, ...payload }, (resp) => {
+			ajax({ action: 'aan_update_note', 
+				id, ...payload }, (resp) => {
 				if (resp && resp.note) upsert(resp.note);
 				if (refreshOnComplete) refresh();
 				if (done) done();
@@ -146,7 +219,7 @@
 		};
 
 
-		const savePosition = (id, position = {}, $card) => {
+		const savePosition = (id, position = {}, card) => {
 			const note = getNote(id);
 			const payload = {};
 
@@ -165,7 +238,7 @@
 			}
 		};
 
-		const saveSize = (id, size = {}, position = {}, $card) => {
+		const saveSize = (id, size = {}, position = {}, card) => {
 			const note = getNote(id);
 			const payload = {};
 
